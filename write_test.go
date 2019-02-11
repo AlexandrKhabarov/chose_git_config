@@ -16,15 +16,14 @@ func TestWriteFromTo(t *testing.T) {
 		t.Errorf("[ERROR in TestWriteFromTo] During Writing To Mock File err is occurred: %v", err)
 	}
 	text := []byte("[user]\n\temail = test@user.com\n\tname = Name")
-	expectedBufferContent := []byte("row1\nrow2\nrow3\n[user]\n\temail = test@user.com\n\tname = Name")
-	err = writeFromTo(mockFile, from, to, text)
-	bufferContent := mockFile.Bytes()
+	expectedBufferContent := []byte("row1\nrow2\nrow3\n[user]\n\temail = test@user.com\n\tname = Name\n")
+	content, err := getNewContent(mockFile, from, to, text)
 
 	if err != nil {
 		t.Errorf("[ERROR in TestWriteFromTo] Error is occured: %v", err)
 	}
-	if bytes.Compare(expectedBufferContent, bufferContent) != 0 {
-		t.Errorf("[ERROR in TestWriteFromTo]\nExpected buffer content: %q\nActual byffer content: %q", expectedBufferContent, bufferContent)
+	if bytes.Compare(expectedBufferContent, content) != 0 {
+		t.Errorf("[ERROR in TestWriteFromTo]\nExpected buffer content: %q\nActual byffer content: %q", expectedBufferContent, content)
 	}
 
 }

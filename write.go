@@ -9,27 +9,41 @@ import (
 )
 
 func UpdateUserInfo(path string, text []byte) error {
-	// todo: Fix bug with growing file by path
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
+	defer f.Close()
 
 	if err != nil {
 		return err
 	}
+
 	start, end := getWritingRange(f)
-	f.Close()
-	f, err = os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0666)
+
+	_, err = f.Seek(0, 0)
 	if err != nil {
 		return err
 	}
-	writeFromTo(f, start, end, text)
+
+	content, err := getNewContent(f, start, end, text)
+	if err != nil {
+		return err
+	}
+
+	err = f.Truncate(0)
+	if err != nil {
+		return err
+	}
+	_, err = f.Write(content)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func writeFromTo(rw io.ReadWriter, from, to int64, text []byte) error {
+func getNewContent(rw io.ReadWriter, from, to int64, text []byte) ([]byte, error) {
 	content, err := ioutil.ReadAll(rw)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	textLen := int64(len(text))
 	contentTailLen := int64(len(content[to:]))
@@ -39,8 +53,8 @@ func writeFromTo(rw io.ReadWriter, from, to int64, text []byte) error {
 	copy(buf[from:from+textLen], text)
 	copy(buf[from+textLen:from+textLen+contentTailLen], content[to:])
 	buf[len(buf)-1] = '\n'
-	rw.Write(buf)
-	return nil
+
+	return buf, nil
 }
 
 func getWritingRange(file io.Reader) (int64, int64) {
