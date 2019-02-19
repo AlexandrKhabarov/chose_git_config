@@ -14,6 +14,7 @@ import (
 
 func ParseConfigFile(path string) ([][]byte, [][]byte, error) {
 	file, err := os.Open(path)
+	defer file.Close()
 	if err != nil {
 		return nil, nil, err
 	}
