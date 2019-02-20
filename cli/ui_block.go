@@ -13,6 +13,7 @@ type Block struct {
 	rows *[][]byte
 	currentRowIndex int
 	selectedRowIndex int
+	isRowSelected bool
 	blockColor termbox.Attribute
 	selectedRowColor termbox.Attribute
 	switchRowColor termbox.Attribute
@@ -34,7 +35,7 @@ func (self *Block)colorBlock(color termbox.Attribute) {
 }
 
 func (self *Block) handleArrowUp() {
-	if self.currentRowIndex - 1 >= 0 {
+	if self.currentRowIndex - 1 >= 0 && !self.isRowSelected {
 		self.colorCurrentRow(self.blockColor)
 		self.currentRowIndex -= 1
 		self.colorCurrentRow(self.switchRowColor)
@@ -43,7 +44,7 @@ func (self *Block) handleArrowUp() {
 
 func (self *Block) handleArrowDown() {
 	rows := self.rows
-	if self.currentRowIndex + 1 < len(*rows) {
+	if self.currentRowIndex + 1 < len(*rows) && !self.isRowSelected {
 		self.colorCurrentRow(self.blockColor)
 		self.currentRowIndex += 1
 		self.colorCurrentRow(self.switchRowColor)
@@ -67,7 +68,15 @@ func (self *Block) colorRow(color termbox.Attribute, colorNum int) {
 
 func (self *Block) handleBackSpace() {
 	// todo: realize handle backspace button
-	
+	if self.isRowSelected {
+		self.isRowSelected = false
+		self.colorCurrentRow(self.switchRowColor)
+		self.selectedRowIndex = 0
+	} else {
+		self.isRowSelected = true
+		self.colorCurrentRow(self.selectedRowColor)
+		self.selectedRowIndex = self.currentRowIndex
+	}
 }
 
 func (self *Block) getSelectedRow() []byte {

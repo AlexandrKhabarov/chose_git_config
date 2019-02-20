@@ -91,12 +91,16 @@ func (self *ConsoleUI) getSelectedBlock() *Block {
 
 func (self *ConsoleUI) changeBlock() {
 	selectedBlockIndex := self.selectedBlockIndex
-	selectedBlock := self.getSelectedBlock()
-	selectedBlock.blockColor = self.selectedBlockColor
-	selectedBlock.drawBlock()
+	self.unSelectBlock()
 	nextBlockIndex := (selectedBlockIndex + 1) % len(self.blocks)
 	self.selectedBlockIndex = nextBlockIndex
 	self.selectBlock()
+}
+
+func(self *ConsoleUI) unSelectBlock() {
+	selectedBlock := self.getSelectedBlock()
+	selectedBlock.blockColor = self.selectedBlockColor
+	selectedBlock.drawBlock()
 }
 
 func (self *ConsoleUI) selectBlock() {
