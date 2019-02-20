@@ -1,9 +1,5 @@
 package main
 
-import (
-	"github.com/sachez/chose_git_config/cli"
-
-)
 
 var defaultPaths = []string{
 	"/etc/gitconfig",
@@ -37,6 +33,6 @@ func main() {
 		close(userEmailChan)
 	}()
 
-	cli.NewConsoleUI(userNamesChan, userEmailChan)
+	NewConsoleUI(userNamesChan, userEmailChan)
 	// go GetUserNamesAndEmail(filePathsChan, userEmailChan, userNamesChan, finishChan)
 }

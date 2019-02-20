@@ -1,4 +1,4 @@
-package cli
+package main
 
 
 import (
@@ -30,7 +30,11 @@ func (self *Block)colorBlock(color termbox.Attribute) {
 	for h := 0; h <  boxHeight; h++ {
 		self.colorRow(color, h)
 	}
-	self.colorCurrentRow(self.switchRowColor)
+	if self.isRowSelected {
+		self.colorCurrentRow(self.selectedRowColor)
+	} else {
+		self.colorCurrentRow(self.switchRowColor)
+	}
 	termbox.Flush()
 }
 
@@ -67,15 +71,14 @@ func (self *Block) colorRow(color termbox.Attribute, colorNum int) {
 }
 
 func (self *Block) handleBackSpace() {
-	// todo: realize handle backspace button
-	if self.isRowSelected {
-		self.isRowSelected = false
-		self.colorCurrentRow(self.switchRowColor)
-		self.selectedRowIndex = 0
-	} else {
+	if !self.isRowSelected {
 		self.isRowSelected = true
 		self.colorCurrentRow(self.selectedRowColor)
 		self.selectedRowIndex = self.currentRowIndex
+	} else {
+		self.isRowSelected = false
+		self.colorCurrentRow(self.switchRowColor)
+		self.selectedRowIndex = 0
 	}
 }
 
@@ -93,7 +96,7 @@ func (self *Block) addRow(row []byte) {
 	if rowsLen < self.height {
 		cellBuffer := termbox.CellBuffer()
 		w, _ := termbox.Size()
-		start := (self.startYPos + rowsLen - 1) * w + self.startXPos
+		start := (self.startYPos + rowsLen) * w + self.startXPos
 		for i, ch := range string(row) {
 			cell := cellBuffer[start + i]
 			cell.Ch = ch

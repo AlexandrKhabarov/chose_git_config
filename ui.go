@@ -1,4 +1,4 @@
-package cli
+package main
 
 import (
 	"time"
@@ -34,8 +34,11 @@ func NewConsoleUI(names, email chan []byte) {
 		startYPos: h,
 		rows: &namesRows,
 		currentRowIndex: 0,
+		isRowSelected: false,
 		blockColor: termbox.ColorGreen,
 		switchRowColor: termbox.ColorBlue,
+		selectedRowColor: termbox.ColorCyan,
+		
 	}
 
 	emailRows := make([][]byte, 0, 0)	
@@ -46,8 +49,10 @@ func NewConsoleUI(names, email chan []byte) {
 		startYPos: h*3,
 		rows: &emailRows,
 		currentRowIndex: 0,
+		isRowSelected: false,
 		blockColor: termbox.ColorGreen,
 		switchRowColor: termbox.ColorBlue,
+		selectedRowColor: termbox.ColorCyan,
 	}
 	ui := ConsoleUI {
 		blocks:[]*Block {
@@ -137,22 +142,22 @@ loop:
 		case termbox.KeyArrowUp:
 			block := self.getSelectedBlock()
 			block.handleArrowUp()
-		case termbox.KeyBackspace:
+		case termbox.KeySpace:
 			block := self.getSelectedBlock()
 			block.handleBackSpace()
 		case termbox.KeyTab:
 			self.changeBlock()
 		case termbox.KeyEnter:
-			// namesBlock := self.getNamesBlock()
-			// emailsBlock := self.getNamesBlock()
-			// name := namesBlock.getSelectedRow()
-			// email := emailsBlock.getSelectedRow()
-			// user := User{
-			// 	UserName: name,
-			// 	UserEmail: email,
-			// }
-			// todo: handle errors and imagine another way for passing path for .git/config
-			// UpdateUserInfo("./.git/config", []byte(user.UserRepresentation()))
+			namesBlock := self.getNamesBlock()
+			emailsBlock := self.getEmailsBlock()
+			name := namesBlock.getSelectedRow()
+			email := emailsBlock.getSelectedRow()
+			user := User{
+				UserName: name,
+				UserEmail: email,
+			}
+			//todo: handle errors and imagine another way for passing path for .git/config
+			UpdateUserInfo("secret_config", []byte(user.UserRepresentation()))
 			break loop
 		default:
 			time.Sleep(time.Microsecond*10)
