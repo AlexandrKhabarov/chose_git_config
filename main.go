@@ -1,5 +1,10 @@
 package main
 
+import (
+	"github.com/sachez/chose_git_config/cli"
+
+)
+
 var defaultPaths = []string{
 	"/etc/gitconfig",
 	"~/.gitconfig",
@@ -8,55 +13,30 @@ var defaultPaths = []string{
 }
 
 func main() {
-	// todo: Add support of gui
-	InitCli()
-//	filePaths := make(chan string)
-//	userEmail := make(chan []byte)
-//	userNames := make(chan []byte)
-//	finish := make(chan struct{})
-//	reader := bufio.NewReader(os.Stdin)
-//
-//	go GetUserNamesAndEmail(filePaths, userEmail, userNames, finish)
-//
-//	for _, defaultPath := range defaultPaths {
-//		filePaths <- defaultPath
-//	}
-//	close(filePaths)
-//	uNames := make([][]byte, 0, 0)
-//	uEmail := make([][]byte, 0, 0)
-//LOOP:
-//	for {
-//		select {
-//		case u := <-userNames:
-//			uNames = append(uNames, u)
-//		case e := <-userEmail:
-//			uEmail = append(uEmail, e)
-//		case <-finish:
-//			break LOOP
-//		default:
-//		}
-//	}
-//	fmt.Println("===Users Names====")
-//	for _, userName := range uNames {
-//		fmt.Printf("%q\n", userName)
-//	}
-//
-//	fmt.Println("===Users Emails====")
-//	for _, email := range uEmail {
-//		fmt.Printf("%q\n", email)
-//	}
-//
-//	fmt.Print("Type User Name from the list:")
-//	chUserName, _ := reader.ReadString('\n')
-//
-//	fmt.Print("Type User Email from the list:")
-//	chUserEmail, _ := reader.ReadString('\n')
-//
-//	user := User{
-//		[]byte(chUserName),
-//		[]byte(chUserEmail),
-//	}
-//
-//	err := UpdateUserInfo("test_file", []byte(user.UserRepresentation()))
-//	fmt.Println(err)
+	userEmailChan := make(chan []byte)
+	userNamesChan := make(chan []byte)
+	go func() {
+		names := [][]byte{
+			[]byte("Sasha"),
+			[]byte("Petya"),
+		}
+
+		emails := [][]byte{
+			[]byte("Sasha@Sasha.com"),
+			[]byte("Petya@Petya.com"),
+		}
+
+		for _, name := range names {
+			userNamesChan <- name
+		}
+		close(userNamesChan)
+
+		for _, email := range emails {
+			userEmailChan <- email
+		}
+		close(userEmailChan)
+	}()
+
+	cli.NewConsoleUI(userNamesChan, userEmailChan)
+	// go GetUserNamesAndEmail(filePathsChan, userEmailChan, userNamesChan, finishChan)
 }
