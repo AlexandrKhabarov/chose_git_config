@@ -2,7 +2,6 @@ package cli
 
 
 import (
-	"fmt"
 	"github.com/nsf/termbox-go"
 )
 
@@ -11,84 +10,47 @@ type Block struct {
 	height int
 	startXPos int
 	startYPos int
-	rows [][]byte
+	rows *[][]byte
 	currentRowIndex int
 	selectedRowIndex int
 	blockColor termbox.Attribute
 	selectedRowColor termbox.Attribute
-	switchRowsColor termbox.Attribute
+	switchRowColor termbox.Attribute
 
 }
 
 
-func (self *Block) renderDefaultBlock() {
-	cellBuffer := termbox.CellBuffer()
-
-	boxStartXPos := self.startXPos
-	boxWidth := self.width
-
-	boxStartYPos := self.startYPos
-	boxHeight := self.height
-	
-	w, _ := termbox.Size()
-
-	for h := 0; h <  boxHeight; h++ {
-		start := (boxStartYPos + h) * w + boxStartXPos
-		for w := 0; w < boxWidth; w++ {
-			cell := cellBuffer[start + w]
-			cell.Bg = self.blockColor	
-			cellBuffer[start + w] = cell
-		}
-	}
-	self.colorToSwitchColor()
-	termbox.Flush()
+func (self *Block) drawBlock() {
+	self.colorBlock(self.blockColor)
 }
 
-func (self *Block)changeBackGraoundColor(color termbox.Attribute) {
-	cellBuffer := termbox.CellBuffer()
-
-	boxStartXPos := self.startXPos
-	boxWidth := self.width
-
-	boxStartYPos := self.startYPos
+func (self *Block)colorBlock(color termbox.Attribute) {
 	boxHeight := self.height
-	
-	w, _ := termbox.Size()
-
 	for h := 0; h <  boxHeight; h++ {
-		start := (boxStartYPos + h) * w + boxStartXPos
-		for w := 0; w < boxWidth; w++ {
-			cell := cellBuffer[start + w]
-			cell.Bg = color	
-			cellBuffer[start + w] = cell
-		}
+		self.colorRow(color, h)
 	}
-	self.colorToSwitchColor()
+	self.colorCurrentRow(self.switchRowColor)
 	termbox.Flush()
 }
 
 func (self *Block) handleArrowUp() {
 	if self.currentRowIndex - 1 >= 0 {
-		fmt.Println("Arrow up")
-		self.colorToDefaultColor()
+		self.colorCurrentRow(self.blockColor)
 		self.currentRowIndex -= 1
-		self.colorToSwitchColor()
+		self.colorCurrentRow(self.switchRowColor)
 	}
 }
 
 func (self *Block) handleArrowDown() {
-	if self.currentRowIndex + 1 < len(self.rows) {
-		self.colorToDefaultColor()
+	rows := self.rows
+	if self.currentRowIndex + 1 < len(*rows) {
+		self.colorCurrentRow(self.blockColor)
 		self.currentRowIndex += 1
-		self.colorToSwitchColor()
+		self.colorCurrentRow(self.switchRowColor)
 	}
 }
-func (self *Block) colorToDefaultColor() {
-	self.colorRow(self.blockColor, self.currentRowIndex)
-}
-
-func (self *Block) colorToSwitchColor() {
-	self.colorRow(self.switchRowsColor, self.currentRowIndex)
+func (self *Block) colorCurrentRow(color termbox.Attribute) {
+	self.colorRow(color, self.currentRowIndex)
 }
 
 func (self *Block) colorRow(color termbox.Attribute, colorNum int) {
@@ -104,21 +66,25 @@ func (self *Block) colorRow(color termbox.Attribute, colorNum int) {
 }
 
 func (self *Block) handleBackSpace() {
+	// todo: realize handle backspace button
 	
 }
 
 func (self *Block) getSelectedRow() []byte {
-	return self.rows[self.selectedRowIndex]
+	rows := self.rows
+	return (*rows)[self.selectedRowIndex]
 }
 
 func (self *Block) addRow(row []byte) {
+	rows := self.rows
+	rowsLen := len(*rows)
 	if len(row) > 0 {
-		self.rows = append(self.rows, row)
+		(*rows) = append((*rows), row)
 	}
-	if len(self.rows) < self.height {
+	if rowsLen < self.height {
 		cellBuffer := termbox.CellBuffer()
 		w, _ := termbox.Size()
-		start := (self.startYPos + len(self.rows) - 1) * w + self.startXPos
+		start := (self.startYPos + rowsLen - 1) * w + self.startXPos
 		for i, ch := range string(row) {
 			cell := cellBuffer[start + i]
 			cell.Ch = ch
