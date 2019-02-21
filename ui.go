@@ -156,8 +156,8 @@ loop:
 				UserName: name,
 				UserEmail: email,
 			}
-			//todo: handle errors and imagine another way for passing path for .git/config
-			UpdateUserInfo("secret_config", []byte(user.UserRepresentation()))
+			//TODO: handle errors and imagine another way for passing path for .git/config
+			UpdateUserInfo(".git/config", []byte(user.UserRepresentation()))
 			break loop
 		default:
 			time.Sleep(time.Microsecond*10)

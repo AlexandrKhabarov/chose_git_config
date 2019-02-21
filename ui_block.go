@@ -10,6 +10,7 @@ type Block struct {
 	height int
 	startXPos int
 	startYPos int
+	// TODO: imanagine way for craeting set for rows (delete duplicates)
 	rows *[][]byte
 	currentRowIndex int
 	selectedRowIndex int

@@ -114,23 +114,17 @@ func GetPathsByFileName(filePaths chan string, path, filename string) error {
 		return err
 	}
 
-	// wg := &sync.WaitGroup{}
 	for _, fileInfo := range filesInfo {
 		name := fileInfo.Name()
 		path := filepath.Join(path, name)
 		if fileInfo.IsDir() {
-			// wg.Add(1)
-			// go func(wg *sync.WaitGroup) {
-				// defer wg.Done()
 			err := GetPathsByFileName(filePaths, path, filename)
 			if err != nil {
 				return err
 			}
-			// }(wg)
 		} else if name == filename {
 			filePaths <- path
 		}
 	}
-	// wg.Wait()
     return nil
 }
