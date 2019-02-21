@@ -1,5 +1,9 @@
 package main
 
+import (
+	"os/user"
+)
+
 
 var defaultPaths = []string{
 	"/etc/gitconfig",
@@ -9,30 +13,29 @@ var defaultPaths = []string{
 }
 
 func main() {
-	userEmailChan := make(chan []byte)
-	userNamesChan := make(chan []byte)
+	userEmailChan := make(chan []byte, 1)
+	userNamesChan := make(chan []byte, 1)
+	filePathsChan := make(chan string)
+
 	go func() {
-		names := [][]byte{
-			[]byte("Sasha"),
-			[]byte("Petya"),
+		for _, path := range defaultPaths {
+			filePathsChan <- path
 		}
-
-		emails := [][]byte{
-			[]byte("Sasha@Sasha.com"),
-			[]byte("Petya@Petya.com"),
-		}
-
-		for _, name := range names {
-			userNamesChan <- name
-		}
-		close(userNamesChan)
-
-		for _, email := range emails {
-			userEmailChan <- email
-		}
-		close(userEmailChan)
 	}()
+	go func() {
+		usr, err := user.Current()
+		if err == nil {
+			// todo: Add logging
+			GetPathsByFileName(filePathsChan, usr.HomeDir, "config")
+		}
+		close(filePathsChan)
+	}()
+	go func() {
+		// todo: Add logging
+		GetUserNamesAndEmail(filePathsChan, userEmailChan, userNamesChan)
+		close(userEmailChan)
+		close(userNamesChan)
+	}() 
 
 	NewConsoleUI(userNamesChan, userEmailChan)
-	// go GetUserNamesAndEmail(filePathsChan, userEmailChan, userNamesChan, finishChan)
 }

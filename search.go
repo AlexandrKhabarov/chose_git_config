@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"os/user"
@@ -58,61 +57,30 @@ LOOP:
 	return userNames, emails, nil
 }
 
-func GetUserNamesAndEmail(filePaths <-chan string, userEmail, userNames chan<- []byte, finish chan <- struct{}) {
-	usersNamesChan := make(chan [][]byte)
-	usersEmailChan := make(chan [][]byte)
-	errChan := make(chan error)
-	finishChan := make(chan struct{})
-
-	go func() {
-		for {
-			select {
-			case users := <-usersNamesChan:
-				for _, u := range users {
-					userNames <- u
-				}
-			case emails := <-usersEmailChan:
-				for _, e := range emails {
-					userEmail <- e
-				}
-			case err := <-errChan:
-				if err != nil {
-					fmt.Printf("%q\n", err)
-				}
-			case <-finishChan:
-				close(finishChan)
-				close(userNames)
-				close(userEmail)
-				finish <- struct{}{}
-				return
-			default:
-			}
-		}
-	}()
-
+func GetUserNamesAndEmail(filePaths chan string, userEmail, userNames chan []byte) error {
 	wg := &sync.WaitGroup{}
 
 	for path := range filePaths {
 		absPath, err := preparePath(path)
 		if err != nil {
-			errChan <- err
+			return err
 		}
 		wg.Add(1)
 		go func(path string, wg *sync.WaitGroup) {
 			defer wg.Done()
-			users, emails, err := ParseConfigFile(path)
-			errChan <- err
-			usersEmailChan <- emails
-			usersNamesChan <- users
+			users, emails, _ := ParseConfigFile(path)
+			for _, email := range emails {
+				userEmail <- email
+			}
+			for _, name := range users {
+				userNames <- name
+			}
 
 		}(absPath, wg)
 	}
 
 	wg.Wait()
-	close(usersNamesChan)
-	close(usersEmailChan)
-	close(errChan)
-	finishChan <- struct{}{}
+	return nil
 }
 
 func preparePath(path string) (string, error) {
@@ -133,4 +101,36 @@ func preparePath(path string) (string, error) {
 		}
 	}
 	return path, err
+}
+
+func GetPathsByFileName(filePaths chan string, path, filename string) error {	
+	f, err := os.Open(path)
+	defer f.Close()
+	if err != nil {
+		return err
+	}
+	filesInfo, err := f.Readdir(-1)
+	if err != nil {
+		return err
+	}
+
+	// wg := &sync.WaitGroup{}
+	for _, fileInfo := range filesInfo {
+		name := fileInfo.Name()
+		path := filepath.Join(path, name)
+		if fileInfo.IsDir() {
+			// wg.Add(1)
+			// go func(wg *sync.WaitGroup) {
+				// defer wg.Done()
+			err := GetPathsByFileName(filePaths, path, filename)
+			if err != nil {
+				return err
+			}
+			// }(wg)
+		} else if name == filename {
+			filePaths <- path
+		}
+	}
+	// wg.Wait()
+    return nil
 }

@@ -71,8 +71,8 @@ func NewConsoleUI(names, email chan []byte) {
 func(self *ConsoleUI) RunUI(names, email chan []byte) {
 	self.renderBlocks()
 	self.selectBlock()
-	self.fillNameBlock(names)
-	self.fillEmailBlock(email)
+	go self.fillNameBlock(names)
+	go self.fillEmailBlock(email)
 	self.runEventLoop()
 }
 
