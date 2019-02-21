@@ -40,13 +40,13 @@ func UpdateUserInfo(path string, text []byte) error {
 	return nil
 }
 
-func getNewContent(rw io.ReadWriter, from, to int64, text []byte) ([]byte, error) {
+func getNewContent(rw io.ReadWriter, from, to int, text []byte) ([]byte, error) {
 	content, err := ioutil.ReadAll(rw)
 	if err != nil {
 		return nil, err
 	}
-	textLen := int64(len(text))
-	contentTailLen := int64(len(content[to:]))
+	textLen := len(text)
+	contentTailLen := len(content[to:])
 
 	buf := make([]byte, from+textLen+contentTailLen+1)
 	copy(buf[:from], content[:from])
@@ -57,8 +57,8 @@ func getNewContent(rw io.ReadWriter, from, to int64, text []byte) ([]byte, error
 	return buf, nil
 }
 
-func getWritingRange(file io.Reader) (int64, int64) {
-	// todo: Check For buffer Overloading in ReadBytes methods
+func getWritingRange(file io.Reader) (int, int) {
+	// TODO: Check For buffer Overloading in ReadBytes methods
 	var (
 		r     = bufio.NewReader(file)
 		start = 0
@@ -89,5 +89,5 @@ LOOP:
 			start += len(line)
 		}
 	}
-	return int64(start), int64(end)
+	return start, end
 }

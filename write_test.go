@@ -9,8 +9,8 @@ func TestWriteFromTo(t *testing.T) {
 	mockFile := bytes.NewBuffer(make([]byte, 0, 1024))
 	_, err := mockFile.WriteString("row1\nrow2\nrow3\n[user]\n\temail = user@test.com\n\tname = TestName")
 	var (
-		from int64 = 15
-		to   int64 = 61
+		from int = 15
+		to   int = 61
 	)
 	if err != nil {
 		t.Errorf("[ERROR in TestWriteFromTo] During Writing To Mock File err is occurred: %v", err)
@@ -32,8 +32,8 @@ func TestGetWritingOffset(t *testing.T) {
 	mockFile := bytes.NewBuffer(make([]byte, 0, 1024))
 	_, err := mockFile.WriteString("row1\nrow2\nrow3\n[user]\n\temail = user@test.com\n\tname = TestName")
 	var (
-		expectedStart int64 = 15
-		expectedEnd   int64 = 61
+		expectedStart int = 15
+		expectedEnd   int = 61
 	)
 	if err != nil {
 		t.Errorf("[ERROR in TestGetWritingOffset] During Writing To Mock File err is occurred: %v", err)
