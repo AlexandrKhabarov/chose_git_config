@@ -2,6 +2,7 @@ package main
 
 
 import (
+	"bytes"
 	"github.com/nsf/termbox-go"
 )
 
@@ -88,13 +89,24 @@ func (self *Block) getSelectedRow() []byte {
 	return (*rows)[self.selectedRowIndex]
 }
 
+// TODO: implement in more ellegant way filtering of incoming rows
+// TODO: reimplement method for coloring row 
+// TODO: add scroling for overloading of rows in block
 func (self *Block) addRow(row []byte) {
 	rows := self.rows
 	rowsLen := len(*rows)
+	alreadyExist := false
 	if len(row) > 0 {
-		(*rows) = append((*rows), row)
+		for _, r := range (*rows) {
+			if bytes.Compare(r, row) == 0 {
+				alreadyExist = true
+			}
+		}
+		if !alreadyExist {
+			(*rows) = append((*rows), row)
+		}
 	}
-	if rowsLen < self.height {
+	if rowsLen < self.height && !alreadyExist && len(row) > 0{
 		cellBuffer := termbox.CellBuffer()
 		w, _ := termbox.Size()
 		start := (self.startYPos + rowsLen) * w + self.startXPos
@@ -104,6 +116,6 @@ func (self *Block) addRow(row []byte) {
 			cell.Fg = termbox.ColorBlack
 			cellBuffer[start + i] = cell
 		}
+		termbox.Flush()
 	}
-	termbox.Flush()
 } 
