@@ -32,6 +32,10 @@ func UpdateUserInfo(path string, text []byte) error {
 	if err != nil {
 		return err
 	}
+	_, err = f.Seek(0, 0)
+	if err != nil {
+		return err
+	}
 	_, err = f.Write(content)
 	if err != nil {
 		return err
