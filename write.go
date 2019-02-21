@@ -48,11 +48,11 @@ func getNewContent(rw io.ReadWriter, from, to int, text []byte) ([]byte, error) 
 	textLen := len(text)
 	contentTailLen := len(content[to:])
 
-	buf := make([]byte, from+textLen+contentTailLen+1)
-	copy(buf[:from], content[:from])
-	copy(buf[from:from+textLen], text)
-	copy(buf[from+textLen:from+textLen+contentTailLen], content[to:])
-	buf[len(buf)-1] = '\n'
+	buf := make([]byte, 0, from+textLen+contentTailLen+1)
+	buf = append(buf, content[:from]...)
+	buf = append(buf, text...)
+	buf = append(buf, content[to:]...)
+	buf = append(buf, '\n')
 
 	return buf, nil
 }
