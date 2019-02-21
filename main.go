@@ -13,8 +13,8 @@ var defaultPaths = []string{
 }
 
 func main() {
-	userEmailChan := make(chan []byte, 1)
-	userNamesChan := make(chan []byte, 1)
+	userEmailChan := make(chan []byte)
+	userNamesChan := make(chan []byte)
 	filePathsChan := make(chan string)
 
 	go func() {
@@ -25,13 +25,13 @@ func main() {
 	go func() {
 		usr, err := user.Current()
 		if err == nil {
-			// todo: Add logging
+			// TODO: Add logging
 			GetPathsByFileName(filePathsChan, usr.HomeDir, "config")
 		}
 		close(filePathsChan)
 	}()
 	go func() {
-		// todo: Add logging
+		// TODO: Add logging
 		GetUserNamesAndEmail(filePathsChan, userEmailChan, userNamesChan)
 		close(userEmailChan)
 		close(userNamesChan)
