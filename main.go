@@ -4,7 +4,6 @@ import (
 	"os/user"
 )
 
-
 var defaultPaths = []string{
 	"/etc/gitconfig",
 	"~/.gitconfig",
@@ -35,7 +34,7 @@ func main() {
 		GetUserNamesAndEmail(filePathsChan, userEmailChan, userNamesChan)
 		close(userEmailChan)
 		close(userNamesChan)
-	}() 
+	}()
 
 	NewConsoleUI(userNamesChan, userEmailChan)
 }

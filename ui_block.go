@@ -1,35 +1,33 @@
 package main
 
-
 import (
 	"bytes"
+
 	"github.com/nsf/termbox-go"
 )
 
 type Block struct {
-	width int
-	height int
+	width     int
+	height    int
 	startXPos int
 	startYPos int
 	// TODO: imanagine way for craeting set for rows (delete duplicates)
-	rows *[][]byte
-	currentRowIndex int
+	rows             *[][]byte
+	currentRowIndex  int
 	selectedRowIndex int
-	isRowSelected bool
-	blockColor termbox.Attribute
+	isRowSelected    bool
+	blockColor       termbox.Attribute
 	selectedRowColor termbox.Attribute
-	switchRowColor termbox.Attribute
-
+	switchRowColor   termbox.Attribute
 }
-
 
 func (self *Block) drawBlock() {
 	self.colorBlock(self.blockColor)
 }
 
-func (self *Block)colorBlock(color termbox.Attribute) {
+func (self *Block) colorBlock(color termbox.Attribute) {
 	boxHeight := self.height
-	for h := 0; h <  boxHeight; h++ {
+	for h := 0; h < boxHeight; h++ {
 		self.colorRow(color, h)
 	}
 	if self.isRowSelected {
@@ -41,7 +39,7 @@ func (self *Block)colorBlock(color termbox.Attribute) {
 }
 
 func (self *Block) handleArrowUp() {
-	if self.currentRowIndex - 1 >= 0 && !self.isRowSelected {
+	if self.currentRowIndex-1 >= 0 && !self.isRowSelected {
 		self.colorCurrentRow(self.blockColor)
 		self.currentRowIndex -= 1
 		self.colorCurrentRow(self.switchRowColor)
@@ -50,7 +48,7 @@ func (self *Block) handleArrowUp() {
 
 func (self *Block) handleArrowDown() {
 	rows := self.rows
-	if self.currentRowIndex + 1 < len(*rows) && !self.isRowSelected {
+	if self.currentRowIndex+1 < len(*rows) && !self.isRowSelected {
 		self.colorCurrentRow(self.blockColor)
 		self.currentRowIndex += 1
 		self.colorCurrentRow(self.switchRowColor)
@@ -63,11 +61,11 @@ func (self *Block) colorCurrentRow(color termbox.Attribute) {
 func (self *Block) colorRow(color termbox.Attribute, colorNum int) {
 	w, _ := termbox.Size()
 	cellBuffer := termbox.CellBuffer()
-	start := (self.startYPos + colorNum) * w + self.startXPos
+	start := (self.startYPos+colorNum)*w + self.startXPos
 	for i := 0; i < self.width; i++ {
-		cell := cellBuffer[start + i]
+		cell := cellBuffer[start+i]
 		cell.Bg = color
-		cellBuffer[start + i] = cell
+		cellBuffer[start+i] = cell
 	}
 	termbox.Flush()
 }
@@ -90,14 +88,14 @@ func (self *Block) getSelectedRow() []byte {
 }
 
 // TODO: implement in more ellegant way filtering of incoming rows
-// TODO: reimplement method for coloring row 
+// TODO: reimplement method for coloring row
 // TODO: add scroling for overloading of rows in block
 func (self *Block) addRow(row []byte) {
 	rows := self.rows
 	rowsLen := len(*rows)
 	alreadyExist := false
 	if len(row) > 0 {
-		for _, r := range (*rows) {
+		for _, r := range *rows {
 			if bytes.Compare(r, row) == 0 {
 				alreadyExist = true
 			}
@@ -106,16 +104,16 @@ func (self *Block) addRow(row []byte) {
 			(*rows) = append((*rows), row)
 		}
 	}
-	if rowsLen < self.height && !alreadyExist && len(row) > 0{
+	if rowsLen < self.height && !alreadyExist && len(row) > 0 {
 		cellBuffer := termbox.CellBuffer()
 		w, _ := termbox.Size()
-		start := (self.startYPos + rowsLen) * w + self.startXPos
+		start := (self.startYPos+rowsLen)*w + self.startXPos
 		for i, ch := range string(row) {
-			cell := cellBuffer[start + i]
+			cell := cellBuffer[start+i]
 			cell.Ch = ch
 			cell.Fg = termbox.ColorBlack
-			cellBuffer[start + i] = cell
+			cellBuffer[start+i] = cell
 		}
 		termbox.Flush()
 	}
-} 
+}

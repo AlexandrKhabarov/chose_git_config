@@ -104,7 +104,7 @@ func preparePath(path string) (string, error) {
 }
 
 // TODO: implement pool of workers for parallel scanning dirs
-func GetPathsByFileName(filePaths chan string, path, filename string) error {	
+func GetPathsByFileName(filePaths chan string, path, filename string) error {
 	f, err := os.Open(path)
 	defer f.Close()
 	if err != nil {
@@ -127,5 +127,5 @@ func GetPathsByFileName(filePaths chan string, path, filename string) error {
 			filePaths <- path
 		}
 	}
-    return nil
+	return nil
 }

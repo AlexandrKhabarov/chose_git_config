@@ -2,16 +2,16 @@ package main
 
 import (
 	"time"
+
 	"github.com/nsf/termbox-go"
 )
 
-
 type ConsoleUI struct {
-	blocks []*Block
+	blocks             []*Block
 	selectedBlockIndex int
-	namesBlockIndex int
-	emailsBlockIndex int
-	selectionColor termbox.Attribute
+	namesBlockIndex    int
+	emailsBlockIndex   int
+	selectionColor     termbox.Attribute
 	selectedBlockColor termbox.Attribute
 }
 
@@ -25,50 +25,48 @@ func NewConsoleUI(names, email chan []byte) {
 	w, h := termbox.Size()
 
 	w, h = w/3, h/5
-	
+
 	namesRows := make([][]byte, 0, 0)
 	namesBlock := Block{
-		height: h,
-		width: w,
-		startXPos: w,
-		startYPos: h,
-		rows: &namesRows,
-		currentRowIndex: 0,
-		isRowSelected: false,
-		blockColor: termbox.ColorGreen,
-		switchRowColor: termbox.ColorBlue,
+		height:           h,
+		width:            w,
+		startXPos:        w,
+		startYPos:        h,
+		rows:             &namesRows,
+		currentRowIndex:  0,
+		isRowSelected:    false,
+		blockColor:       termbox.ColorGreen,
+		switchRowColor:   termbox.ColorBlue,
 		selectedRowColor: termbox.ColorCyan,
-		
 	}
 
-	emailRows := make([][]byte, 0, 0)	
+	emailRows := make([][]byte, 0, 0)
 	emailsBlock := Block{
-		height: h,
-		width: w,
-		startXPos: w,
-		startYPos: h*3,
-		rows: &emailRows,
-		currentRowIndex: 0,
-		isRowSelected: false,
-		blockColor: termbox.ColorGreen,
-		switchRowColor: termbox.ColorBlue,
+		height:           h,
+		width:            w,
+		startXPos:        w,
+		startYPos:        h * 3,
+		rows:             &emailRows,
+		currentRowIndex:  0,
+		isRowSelected:    false,
+		blockColor:       termbox.ColorGreen,
+		switchRowColor:   termbox.ColorBlue,
 		selectedRowColor: termbox.ColorCyan,
 	}
-	ui := ConsoleUI {
-		blocks:[]*Block {
+	ui := ConsoleUI{
+		blocks: []*Block{
 			&namesBlock,
 			&emailsBlock,
 		},
 		selectedBlockIndex: 0,
-		namesBlockIndex: 0,
-		emailsBlockIndex: 1,
-		selectionColor: termbox.ColorRed,
+		namesBlockIndex:    0,
+		emailsBlockIndex:   1,
+		selectionColor:     termbox.ColorRed,
 	}
 	ui.RunUI(names, email)
 }
 
-
-func(self *ConsoleUI) RunUI(names, email chan []byte) {
+func (self *ConsoleUI) RunUI(names, email chan []byte) {
 	self.renderBlocks()
 	self.selectBlock()
 	go self.fillNameBlock(names)
@@ -102,7 +100,7 @@ func (self *ConsoleUI) changeBlock() {
 	self.selectBlock()
 }
 
-func(self *ConsoleUI) unSelectBlock() {
+func (self *ConsoleUI) unSelectBlock() {
 	selectedBlock := self.getSelectedBlock()
 	selectedBlock.blockColor = self.selectedBlockColor
 	selectedBlock.drawBlock()
@@ -115,15 +113,14 @@ func (self *ConsoleUI) selectBlock() {
 	selectedBlock.drawBlock()
 }
 
-
-func(self *ConsoleUI) fillNameBlock(names chan []byte) {
+func (self *ConsoleUI) fillNameBlock(names chan []byte) {
 	namesBlock := self.getNamesBlock()
 	for name := range names {
 		namesBlock.addRow(name)
 	}
 }
 
-func(self *ConsoleUI) fillEmailBlock(emails chan []byte) {
+func (self *ConsoleUI) fillEmailBlock(emails chan []byte) {
 	emailsBlock := self.getEmailsBlock()
 	for email := range emails {
 		emailsBlock.addRow(email)
@@ -153,15 +150,14 @@ loop:
 			name := namesBlock.getSelectedRow()
 			email := emailsBlock.getSelectedRow()
 			user := User{
-				UserName: name,
+				UserName:  name,
 				UserEmail: email,
 			}
 			//TODO: handle errors and imagine another way for passing path for .git/config
 			UpdateUserInfo(".git/config", []byte(user.UserRepresentation()))
 			break loop
 		default:
-			time.Sleep(time.Microsecond*10)
+			time.Sleep(time.Microsecond * 10)
 		}
 	}
 }
-
