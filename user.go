@@ -8,5 +8,5 @@ type User struct {
 }
 
 func (user *User) UserRepresentation() string {
-	return fmt.Sprintf("[user]\n\tuser = %s\n\temail = %s", user.UserName, user.UserEmail)
+	return fmt.Sprintf("[user]\n\tname = %s\n\temail = %s", user.UserName, user.UserEmail)
 }
