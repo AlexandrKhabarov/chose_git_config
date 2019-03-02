@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/sachez/chose_git_config/cli"
+	"github.com/sachez/chose_git_config/config"
 	"os/user"
 )
 
@@ -25,16 +27,16 @@ func main() {
 		usr, err := user.Current()
 		if err == nil {
 			// TODO: Add logging
-			GetPathsByFileName(filePathsChan, usr.HomeDir, "config")
+			config.GetPathsByFileName(filePathsChan, usr.HomeDir, "config")
 		}
 		close(filePathsChan)
 	}()
 	go func() {
 		// TODO: Add logging
-		GetUserNamesAndEmail(filePathsChan, userEmailChan, userNamesChan)
+		config.GetUserNamesAndEmail(filePathsChan, userEmailChan, userNamesChan)
 		close(userEmailChan)
 		close(userNamesChan)
 	}()
 
-	NewConsoleUI(userNamesChan, userEmailChan)
+	cli.NewConsoleUI(userNamesChan, userEmailChan)
 }

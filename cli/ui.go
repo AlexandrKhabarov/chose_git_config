@@ -1,9 +1,9 @@
-package main
+package cli
 
 import (
-	"time"
-
 	"github.com/nsf/termbox-go"
+	"github.com/sachez/chose_git_config/config"
+	"time"
 )
 
 type ConsoleUI struct {
@@ -20,6 +20,7 @@ func NewConsoleUI(names, email chan []byte) {
 	if err != nil {
 		panic(err)
 	}
+
 	defer termbox.Close()
 
 	w, h := termbox.Size()
@@ -149,12 +150,12 @@ loop:
 			emailsBlock := self.getEmailsBlock()
 			name := namesBlock.getSelectedRow()
 			email := emailsBlock.getSelectedRow()
-			user := User{
+			user := config.User{
 				UserName:  name,
 				UserEmail: email,
 			}
 			//TODO: handle errors and imagine another way for passing path for .git/config
-			UpdateUserInfo(".git/config", []byte(user.UserRepresentation()))
+			config.UpdateUserInfo(".git/config", []byte(user.UserRepresentation()))
 			break loop
 		default:
 			time.Sleep(time.Microsecond * 10)
