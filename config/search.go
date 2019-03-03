@@ -103,99 +103,37 @@ func preparePath(path string) (string, error) {
 	return path, err
 }
 
-func GetPathsByFileName2(path, filename string) (chan string, chan error, chan struct{}) {
-	resultPaths := make(chan string)
+func GetPathsByFileName(path, filename string) (chan string, chan error, chan struct{}) {
+	resultsPaths := make(chan string)
 	errors := make(chan error)
 	quit := make(chan struct{})
 
-	newDirs := make(chan string)
+	go func() {
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					errors <- err
+				}
+				if info.Name() == filename {
+					resultsPaths <- path
+				}
+				return nil
+			})
 
-	wg := &sync.WaitGroup{}
-	// todo: check the correctness of searching
-	go func(wg *sync.WaitGroup, resultPaths chan string, errors chan error, newDirs chan string) {
-		for dir := range newDirs {
-			wg.Add(1)
-			go func(wg *sync.WaitGroup, dir string) {
-				defer wg.Done()
-				getPathsByFileName(resultPaths, errors, newDirs, dir, filename)
-			}(wg, dir)
-		}
-	}(wg, resultPaths, errors, newDirs)
-
-	go func(wg *sync.WaitGroup, resultPaths chan string, errors chan error, newDirs chan string) {
-		pathInfo, err := os.Stat(path)
-		if err != nil {
-			errors <- err
-			return
-		}
-
-		if pathInfo.IsDir() {
-			dir, err := os.Open(path)
 			if err != nil {
 				errors <- err
-				return
 			}
-			dirNames, err := dir.Readdirnames(-1)
-			if err != nil {
-				errors <- err
-				return
-			}
-			for _, dirName := range dirNames {
-				newDirPath := filepath.Join(path, dirName)
-				newDirs <- newDirPath
-			}
-			wg.Wait()
-			quit <- struct{}{}
-			close(resultPaths)
-			close(newDirs)
-			close(errors)
-			close(quit)
-		} else {
-			getPathsByFileName(resultPaths, errors, newDirs, path, filename)
-		}
-	}(wg, resultPaths, errors, newDirs)
+		}(wg)
 
-	return resultPaths, errors, quit
-}
+		wg.Wait()
+		quit <- struct{}{}
+		close(resultsPaths)
+		close(errors)
+		close(quit)
+	}()
 
-func getPathsByFileName(resultPaths chan string, errors chan error, newDirs chan string, path, filename string) {
-	info, err := os.Stat(path)
-	if err != nil {
-		errors <- err
-		return
-	}
-	switch info.IsDir() {
-	case true:
-		f, err := os.Open(path)
-		defer func() {
-			err := f.Close()
-			if err != nil {
-				panic(err)
-			}
-		}()
-		if err != nil {
-			errors <- err
-			return
-		}
-		filesInfo, err := f.Readdir(-1)
-		if err != nil {
-			errors <- err
-			return
-		}
-
-		for _, fileInfo := range filesInfo {
-			name := fileInfo.Name()
-			path := filepath.Join(path, name)
-			if name == filename {
-				resultPaths <- path
-			}
-			if fileInfo.IsDir() {
-				newDirs <- path
-			}
-		}
-	case false:
-		if info.Name() == filename {
-			resultPaths <- filepath.Join(path, info.Name())
-		}
-	}
+	return resultsPaths, errors, quit
 }
