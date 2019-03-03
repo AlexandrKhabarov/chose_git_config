@@ -5,20 +5,20 @@ import (
 	"time"
 )
 
-func NewErrorHandler() errorHandler {
-	handler := errorHandler{
+func NewErrorHandler() ErrorHandler {
+	handler := ErrorHandler{
 		make(chan chan error),
 		make(chan struct{}),
 	}
 	return handler
 }
 
-type errorHandler struct {
+type ErrorHandler struct {
 	newErrors chan chan error
 	quit      chan struct{}
 }
 
-func (handler *errorHandler) Run() {
+func (handler *ErrorHandler) Run() {
 	go func() {
 	loop:
 		for {
@@ -34,15 +34,15 @@ func (handler *errorHandler) Run() {
 	}()
 }
 
-func (handler *errorHandler) Handle(errors chan error) {
+func (handler *ErrorHandler) Handle(errors chan error) {
 	handler.newErrors <- errors
 }
 
-func (handler *errorHandler) Quit() {
+func (handler *ErrorHandler) Quit() {
 	handler.quit <- struct{}{}
 }
 
-func (handler *errorHandler) handle(errors chan error) {
+func (handler *ErrorHandler) handle(errors chan error) {
 	// todo: Add handler interface for handling each error
 	for err := range errors {
 		fmt.Println(err)
