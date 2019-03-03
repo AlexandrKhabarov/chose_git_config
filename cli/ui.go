@@ -68,7 +68,6 @@ func NewConsoleUI() ConsoleUI {
 }
 
 func (ui *ConsoleUI) RunUI(names, email chan []byte) {
-	defer termbox.Close()
 	ui.renderBlocks()
 	ui.selectBlock()
 	go ui.fillNameBlock(names)
@@ -134,6 +133,7 @@ loop:
 	for {
 		switch e := termbox.PollEvent(); e.Key {
 		case termbox.KeyEsc:
+			termbox.Close()
 			break loop
 		case termbox.KeyArrowDown:
 			block := ui.getSelectedBlock()

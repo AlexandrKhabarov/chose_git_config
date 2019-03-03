@@ -19,6 +19,11 @@ func main() {
 	errHandler.Run()
 	if err == nil {
 		paths, errors := config.GetPathsByFileName(usr.HomeDir, "config")
+		go func() {
+			for _, path := range defaultPaths {
+				paths <- path
+			}
+		}()
 		errHandler.Handle(errors)
 		userEmailChan, userNamesChan, errors := config.GetUserNamesAndEmail(paths)
 		errHandler.Handle(errors)
