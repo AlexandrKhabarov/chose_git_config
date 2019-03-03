@@ -7,6 +7,7 @@ import (
 )
 
 type ConsoleUI struct {
+	Errors             chan error
 	blocks             []*Block
 	selectedBlockIndex int
 	namesBlockIndex    int
@@ -15,13 +16,11 @@ type ConsoleUI struct {
 	selectedBlockColor termbox.Attribute
 }
 
-func NewConsoleUI(names, email chan []byte) {
+func NewConsoleUI() ConsoleUI {
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
 	}
-
-	defer termbox.Close()
 
 	w, h := termbox.Size()
 
@@ -55,6 +54,7 @@ func NewConsoleUI(names, email chan []byte) {
 		selectedRowColor: termbox.ColorCyan,
 	}
 	ui := ConsoleUI{
+		Errors: make(chan error),
 		blocks: []*Block{
 			&namesBlock,
 			&emailsBlock,
@@ -64,90 +64,91 @@ func NewConsoleUI(names, email chan []byte) {
 		emailsBlockIndex:   1,
 		selectionColor:     termbox.ColorRed,
 	}
-	ui.RunUI(names, email)
+	return ui
 }
 
-func (self *ConsoleUI) RunUI(names, email chan []byte) {
-	self.renderBlocks()
-	self.selectBlock()
-	go self.fillNameBlock(names)
-	go self.fillEmailBlock(email)
-	self.runEventLoop()
+func (ui *ConsoleUI) RunUI(names, email chan []byte) {
+	defer termbox.Close()
+	ui.renderBlocks()
+	ui.selectBlock()
+	go ui.fillNameBlock(names)
+	go ui.fillEmailBlock(email)
+	ui.runEventLoop()
 }
 
-func (self *ConsoleUI) getNamesBlock() *Block {
-	return self.blocks[self.namesBlockIndex]
+func (ui *ConsoleUI) getNamesBlock() *Block {
+	return ui.blocks[ui.namesBlockIndex]
 }
 
-func (self *ConsoleUI) getEmailsBlock() *Block {
-	return self.blocks[self.emailsBlockIndex]
+func (ui *ConsoleUI) getEmailsBlock() *Block {
+	return ui.blocks[ui.emailsBlockIndex]
 }
 
-func (self *ConsoleUI) renderBlocks() {
-	for _, block := range self.blocks {
+func (ui *ConsoleUI) renderBlocks() {
+	for _, block := range ui.blocks {
 		block.drawBlock()
 	}
 }
 
-func (self *ConsoleUI) getSelectedBlock() *Block {
-	return self.blocks[self.selectedBlockIndex]
+func (ui *ConsoleUI) getSelectedBlock() *Block {
+	return ui.blocks[ui.selectedBlockIndex]
 }
 
-func (self *ConsoleUI) changeBlock() {
-	selectedBlockIndex := self.selectedBlockIndex
-	self.unSelectBlock()
-	nextBlockIndex := (selectedBlockIndex + 1) % len(self.blocks)
-	self.selectedBlockIndex = nextBlockIndex
-	self.selectBlock()
+func (ui *ConsoleUI) changeBlock() {
+	selectedBlockIndex := ui.selectedBlockIndex
+	ui.unSelectBlock()
+	nextBlockIndex := (selectedBlockIndex + 1) % len(ui.blocks)
+	ui.selectedBlockIndex = nextBlockIndex
+	ui.selectBlock()
 }
 
-func (self *ConsoleUI) unSelectBlock() {
-	selectedBlock := self.getSelectedBlock()
-	selectedBlock.blockColor = self.selectedBlockColor
+func (ui *ConsoleUI) unSelectBlock() {
+	selectedBlock := ui.getSelectedBlock()
+	selectedBlock.blockColor = ui.selectedBlockColor
 	selectedBlock.drawBlock()
 }
 
-func (self *ConsoleUI) selectBlock() {
-	selectedBlock := self.getSelectedBlock()
-	self.selectedBlockColor = selectedBlock.blockColor
-	selectedBlock.blockColor = self.selectionColor
+func (ui *ConsoleUI) selectBlock() {
+	selectedBlock := ui.getSelectedBlock()
+	ui.selectedBlockColor = selectedBlock.blockColor
+	selectedBlock.blockColor = ui.selectionColor
 	selectedBlock.drawBlock()
 }
 
-func (self *ConsoleUI) fillNameBlock(names chan []byte) {
-	namesBlock := self.getNamesBlock()
+func (ui *ConsoleUI) fillNameBlock(names chan []byte) {
+	namesBlock := ui.getNamesBlock()
 	for name := range names {
 		namesBlock.addRow(name)
 	}
 }
 
-func (self *ConsoleUI) fillEmailBlock(emails chan []byte) {
-	emailsBlock := self.getEmailsBlock()
+func (ui *ConsoleUI) fillEmailBlock(emails chan []byte) {
+	emailsBlock := ui.getEmailsBlock()
 	for email := range emails {
 		emailsBlock.addRow(email)
 	}
 }
 
-func (self *ConsoleUI) runEventLoop() {
+func (ui *ConsoleUI) runEventLoop() {
 loop:
 	for {
 		switch e := termbox.PollEvent(); e.Key {
 		case termbox.KeyEsc:
 			break loop
 		case termbox.KeyArrowDown:
-			block := self.getSelectedBlock()
+			block := ui.getSelectedBlock()
 			block.handleArrowDown()
 		case termbox.KeyArrowUp:
-			block := self.getSelectedBlock()
+			block := ui.getSelectedBlock()
 			block.handleArrowUp()
 		case termbox.KeySpace:
-			block := self.getSelectedBlock()
+			block := ui.getSelectedBlock()
 			block.handleBackSpace()
 		case termbox.KeyTab:
-			self.changeBlock()
+			ui.changeBlock()
 		case termbox.KeyEnter:
-			namesBlock := self.getNamesBlock()
-			emailsBlock := self.getEmailsBlock()
+			namesBlock := ui.getNamesBlock()
+			emailsBlock := ui.getEmailsBlock()
 			name := namesBlock.getSelectedRow()
 			email := emailsBlock.getSelectedRow()
 			user := config.User{

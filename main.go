@@ -14,29 +14,17 @@ var defaultPaths = []string{
 }
 
 func main() {
-	userEmailChan := make(chan []byte)
-	userNamesChan := make(chan []byte)
-	filePathsChan := make(chan string)
-
-	go func() {
-		for _, path := range defaultPaths {
-			filePathsChan <- path
-		}
-	}()
-	go func() {
-		usr, err := user.Current()
-		if err == nil {
-			// TODO: Add logging
-			config.GetPathsByFileName(filePathsChan, usr.HomeDir, "config")
-		}
-		close(filePathsChan)
-	}()
-	go func() {
-		// TODO: Add logging
-		config.GetUserNamesAndEmail(filePathsChan, userEmailChan, userNamesChan)
-		close(userEmailChan)
-		close(userNamesChan)
-	}()
-
-	cli.NewConsoleUI(userNamesChan, userEmailChan)
+	usr, err := user.Current()
+	errHandler := config.NewErrorHandler()
+	errHandler.Run()
+	if err == nil {
+		paths, errors := config.GetPathsByFileName(usr.HomeDir, "config")
+		errHandler.Handle(errors)
+		userEmailChan, userNamesChan, errors := config.GetUserNamesAndEmail(paths)
+		errHandler.Handle(errors)
+		ui := cli.NewConsoleUI()
+		errHandler.Handle(ui.Errors)
+		ui.RunUI(userNamesChan, userEmailChan)
+		errHandler.Quit()
+	}
 }
