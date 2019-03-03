@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -44,7 +45,10 @@ func (handler *ErrorHandler) Quit() {
 
 func (handler *ErrorHandler) handle(errors chan error) {
 	// todo: Add handler interface for handling each error
+	f, _ := os.Create("error.log")
+	defer f.Close()
 	for err := range errors {
-		fmt.Println(err)
+		a := fmt.Sprintf("%v", err)
+		f.WriteString(a)
 	}
 }

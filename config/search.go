@@ -1,10 +1,10 @@
 package config
 
 import (
-	"bufio"
 	"bytes"
-	"io"
+	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"strings"
@@ -60,15 +60,19 @@ func GetUserNamesAndEmail(paths chan string) (chan []byte, chan []byte, chan err
 			wg.Add(1)
 			go func(path string, wg *sync.WaitGroup) {
 				defer wg.Done()
-				users, emails, err := ParseConfigFile(path)
-				for _, email := range emails {
-					userEmails <- email
-				}
-				for _, name := range users {
-					userNames <- name
-				}
+				name, err := getUserName(path)
 				if err != nil {
 					errors <- err
+				}
+				if name != nil {
+					userNames <- name
+				}
+				email, err := getUserEmail(path)
+				if err != nil {
+					errors <- err
+				}
+				if userEmails != nil {
+					userEmails <- email
 				}
 			}(absPath, wg)
 		}
@@ -81,50 +85,26 @@ func GetUserNamesAndEmail(paths chan string) (chan []byte, chan []byte, chan err
 	return userEmails, userNames, errors
 }
 
-func ParseConfigFile(path string) ([][]byte, [][]byte, error) {
-	file, err := os.Open(path)
-	defer file.Close()
+func getUserName(path string) ([]byte, error) {
+	cmd := exec.Command("git", "config", "-f", path, "user.name")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	name, err := cmd.Output()
 	if err != nil {
-		return nil, nil, err
+		return nil, fmt.Errorf("%v: %v", err.Error(), stderr.String())
 	}
-
-	return parseConfigFile(file)
+	return name, nil
 }
 
-func parseConfigFile(file io.Reader) ([][]byte, [][]byte, error) {
-	fileScanner := bufio.NewScanner(file)
-
-	userNames := make([][]byte, 0, 0)
-	emails := make([][]byte, 0, 0)
-
-LOOP:
-	for fileScanner.Scan() {
-		row := fileScanner.Bytes()
-		if bytes.Contains(row, []byte("[user]")) {
-			for fileScanner.Scan() {
-				row = fileScanner.Bytes()
-				switch {
-				case bytes.Contains(row, []byte("[")):
-					break LOOP
-				case bytes.Contains(row, []byte("email")):
-					index := bytes.Index(row, []byte("="))
-					if index != -1 {
-						if index+1 < len(row) {
-							emails = append(emails, bytes.TrimSpace(row[index+1:]))
-						}
-					}
-				case bytes.Contains(row, []byte("name")):
-					index := bytes.Index(row, []byte("="))
-					if index != -1 {
-						if index+1 < len(row) {
-							userNames = append(userNames, bytes.TrimSpace(row[index+1:]))
-						}
-					}
-				}
-			}
-		}
+func getUserEmail(path string) ([]byte, error) {
+	cmd := exec.Command("git", "config", "-f", path, "user.email")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	email, err := cmd.Output()
+	if err != nil {
+		return nil, fmt.Errorf("%v: %v", err.Error(), stderr.String())
 	}
-	return userNames, emails, nil
+	return email, nil
 }
 
 func preparePath(path string) (string, error) {

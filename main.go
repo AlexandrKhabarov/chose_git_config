@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/sachez/chose_git_config/cli"
 	"github.com/sachez/chose_git_config/config"
+	"os/exec"
 	"os/user"
 )
 
@@ -14,6 +15,10 @@ var defaultPaths = []string{
 }
 
 func main() {
+	_, err := exec.LookPath("git")
+	if err != nil {
+		panic(err)
+	}
 	usr, err := user.Current()
 	errHandler := config.NewErrorHandler()
 	errHandler.Run()
@@ -31,5 +36,7 @@ func main() {
 		errHandler.Handle(ui.Errors)
 		ui.RunUI(userNamesChan, userEmailChan)
 		errHandler.Quit()
+	} else {
+		panic(err)
 	}
 }
